@@ -4,3 +4,4 @@ mlflow==3.15.1
 scikit-learn
 pandas
 numpy
+great_expectations
