@@ -59,16 +59,18 @@ with mlflow.start_run(run_name=run_name) as run:
         model.predict_proba(X_test)[:, 1]
     )
 
+    with open("auc.txt", "w") as f:
+        f.write(str(auc))
+
     mlflow.log_metric("auc", auc)
 
     print(f"AUC: {auc:.4f}")
 
     # Simpan model ke MLflow
     mlflow.sklearn.log_model(
-        model,
-        "model"
+        sk_model=model,
+        name="model"
     )
-
     print("Model berhasil dicatat ke MLflow.")
 
 

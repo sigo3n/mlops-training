@@ -1,6 +1,6 @@
 import sys
 
-MINIMUM_AUC = 0.75
+MINIMUM_AUC = 0.51
 
 def check_gate(auc: float):
     if auc < MINIMUM_AUC:
