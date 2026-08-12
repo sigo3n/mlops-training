@@ -1,110 +1,71 @@
-import great_expectations as gx
-import pandas as pd
 import sys
-from pathlib import Path
+import pandas as pd
+import great_expectations as gx
 
 
-# ============================================================
-# 1. Load dataset
-# ============================================================
-
-data_path = Path("data/train.csv")
-
-if not data_path.exists():
-    print(f"GAGAL: File tidak ditemukan: {data_path}")
-    sys.exit(1)
-
-df = pd.read_csv(data_path)
-
-print(f"Dataset loaded: {df.shape[0]} rows, {df.shape[1]} columns")
+DATA_PATH = "data/train.csv"
 
 
-# ============================================================
-# 2. Check required columns
-# ============================================================
+def validate_data():
 
-required_columns = [
-    "income",
-    "age",
-    "target"
-]
+    print(f"Loading dataset: {DATA_PATH}")
 
-missing_columns = [
-    col for col in required_columns
-    if col not in df.columns
-]
+    df = pd.read_csv(DATA_PATH)
 
-if missing_columns:
     print(
-        f"GAGAL: Kolom berikut tidak ditemukan: "
-        f"{missing_columns}"
+        f"Dataset loaded: {len(df)} rows, {len(df.columns)} columns"
     )
-    sys.exit(1)
+
+    # ---------------------------------------------------------
+    # Basic validation
+    # ---------------------------------------------------------
+
+    success = True
+
+    # income tidak boleh NULL
+    if df["income"].isnull().any():
+        print("FAIL: Kolom income mengandung NULL")
+        success = False
+    else:
+        print("PASS: income tidak mengandung NULL")
+
+    # age harus 18-100
+    invalid_age = ~df["age"].between(18, 100)
+
+    if invalid_age.any():
+        print(
+            f"FAIL: Terdapat {invalid_age.sum()} nilai age "
+            "di luar range 18-100"
+        )
+        success = False
+    else:
+        print("PASS: age berada pada range 18-100")
+
+    # target harus 0 atau 1
+    invalid_target = ~df["target"].isin([0, 1])
+
+    if invalid_target.any():
+        print(
+            f"FAIL: Terdapat {invalid_target.sum()} "
+            "nilai target selain 0/1"
+        )
+        success = False
+    else:
+        print("PASS: target hanya berisi 0 dan 1")
+
+    # ---------------------------------------------------------
+    # Pipeline gate
+    # ---------------------------------------------------------
+
+    if not success:
+        print(
+            "GAGAL: Data quality check tidak lolos "
+            "— pipeline dihentikan"
+        )
+        sys.exit(1)
+
+    print("LOLOS: Data quality check berhasil")
 
 
-# ============================================================
-# 3. Great Expectations
-# ============================================================
-
-context = gx.get_context()
-
-validator = context.sources.pandas_default.read_csv(
-    str(data_path)
-)
-
-
-# ============================================================
-# 4. Data Quality Rules
-# ============================================================
-
-validator.expect_column_values_to_not_be_null(
-    "income"
-)
-
-validator.expect_column_values_to_not_be_null(
-    "age"
-)
-
-validator.expect_column_values_to_not_be_null(
-    "target"
-)
-
-validator.expect_column_values_to_be_between(
-    "age",
-    min_value=18,
-    max_value=100
-)
-
-validator.expect_column_values_to_be_in_set(
-    "target",
-    [0, 1]
-)
-
-
-# ============================================================
-# 5. Validate
-# ============================================================
-
-results = validator.validate()
-
-
-# ============================================================
-# 6. Quality Gate
-# ============================================================
-
-if not results.success:
-
-    print()
-    print("=" * 60)
-    print("GAGAL: Data quality check tidak lolos")
-    print("Pipeline dihentikan.")
-    print("=" * 60)
-
-    sys.exit(1)
-
-
-print()
-print("=" * 60)
-print("LOLOS: Data quality check berhasil")
-print("Dataset siap digunakan untuk training.")
-print("=" * 60)
+if __name__ == "__main__":
+    validate_data()
