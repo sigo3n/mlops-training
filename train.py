@@ -16,11 +16,38 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 mlflow.set_tracking_uri("http://127.0.0.1:5000")
 mlflow.set_experiment("training-siang")
-with mlflow.start_run():
-    params = {"n_estimators": n_estimators, "max_depth": max_depth, "random_state": 42}
+with mlflow.start_run() as run:
+
+    print(f"Run ID: {run.info.run_id}")
+
+    params = {
+        "n_estimators": n_estimators,
+        "max_depth": max_depth,
+        "random_state": 42
+    }
+
     mlflow.log_params(params)
-    model = RandomForestClassifier(**params).fit(X_train, y_train)
-    auc = roc_auc_score(y_test, model.predict_proba(X_test)[:, 1])
+
+    model = RandomForestClassifier(**params).fit(
+        X_train,
+        y_train
+    )
+
+    auc = roc_auc_score(
+        y_test,
+        model.predict_proba(X_test)[:, 1]
+    )
+
     mlflow.log_metric("auc", auc)
-    mlflow.sklearn.log_model(model, "model")
-    print(f"n_estimators={n_estimators}, max_depth={max_depth} -> AUC: {auc:.4f}")
+
+    mlflow.sklearn.log_model(
+        model,
+        "model"
+    )
+
+    print(
+        f"n_estimators={n_estimators}, "
+        f"max_depth={max_depth} -> AUC: {auc:.4f}"
+    )
+
+print("MLflow run sudah selesai.")
