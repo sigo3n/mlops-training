@@ -14,7 +14,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.14"
+          python-version: "3.12"
 
       - name: Install dependencies
         run: pip install -r requirements.txt
@@ -23,7 +23,7 @@ jobs:
         run: python validate_data.py
 
       - name: Train model
-        run: python train.py 200 8
+        run: python train.py 10 8
         
       - name: Cek Model Gate
         run: python check_model_gate.py $(cat auc.txt)
